@@ -102,23 +102,10 @@ void pipe_cycle()
 	pipe_stage_mem();
     pipe_stage_execute();
     //only do these stages if we don't need to stall
-    if(stall == 0) && (branch_stall == 0)) {
-        if(taken == 3) {
-            pipe_stage_decode();
-            if(branch_stall == 0) {
-                pipe_stage_fetch();
-            }
-            CURRENT_STATE.PC = CURRENT_STATE.PC + 4;
-        }
-    	if(taken == 0) {
-            pipe_stage_decode();
-            pipe_stage_fetch();
-        }
-        if(taken == 1) {
-            pipe_stage_fetch();
-        }
-    	//will need to change later
-    	//CURRENT_STATE.PC = CURRENT_STATE.PC + 4;
+    if(stall == 0) {
+        pipe_stage_decode();
+        pipe_stage_fetch();
+        CURRENT_STATE.PC = CURRENT_STATE.PC + 4;
     }
     if(stall == 1)
     {
@@ -441,24 +428,9 @@ void pipe_stage_execute()
         if (DE_to_EX.decoded_instr.opcode == BR) {
             CURRENT_STATE.PC = CURRENT_STATE.REGS[DE_to_EX.instr_data.rn];
         }
-        // TODO
+        // B PROGRESS
         if (DE_to_EX.decoded_instr.opcode == B) {
-            unint64_t val = CURRENT_STATE.PC + DE_to_EX.instr_data.address;
-            // CORRECT CONDITION
-            if (val == stall_pc) {
-                IF_to_DE.pc = mem_read_32(val);
-                CURRENT_STATE.PC = val + 4;
-                taken = 0;
-                branch_stall = 0;
-            }
-            // NOT taken condition is not relevant here
-            //CURRENT_STATE.PC = CURRENT_STATE.PC + DE_to_EX.instr_data.address;
-            //taken condition, INCORRECT
-            if(val != stall_pc) {
-                CURRENT_STATE.PC = CURRENT_STATE.PC + DE_to_EX.instr_data.address;
-                taken = 1;
-                branch_stall = 0;
-            }
+            CURRENT_STATE.PC = CURRENT_STATE.PC + DE_to_EX.instr_data.address;
         }
         // TODO
         if (DE_to_EX.decoded_instr.opcode == BEQ) {
@@ -680,7 +652,7 @@ void pipe_stage_decode()
 	bit_26 b_addr_26;
 	b_addr_26.bits = b_addr * 4;
 
-	// B
+	// B progress
 	if (opcode == 0x5) {
     	enum instr_type type =  BI;
    		enum op opcode = B;
@@ -688,9 +660,6 @@ void pipe_stage_decode()
 		DE_to_EX.decoded_instr.opcode = opcode;
 		DE_to_EX.decoded_instr.type = type;
 		DE_to_EX.decoded_instr.data = DE_to_EX.instr_data;
-        branch_stall = 0;
-        //because it's the pc in this stage plus 4 ? or not plus 4, idk
-        stall_pc = CURRENT_STATE.PC;
 
 	}
 
