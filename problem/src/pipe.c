@@ -104,6 +104,8 @@ void pipe_cycle()
             printf("taken cond in cycle pc value: %lx", CURRENT_STATE.PC);
             pipe_stage_fetch();
             cycles++;
+            taken = 0;
+            CURRENT_STATE.PC += 4;
             return;
         }
         if(!taken) {
@@ -114,6 +116,7 @@ void pipe_cycle()
             printf("NOT taken cond in cycle pc value after addition of 4: %lx", CURRENT_STATE.PC);
             pipe_stage_fetch();
             cycles++;
+            CURRENT_STATE.PC += 4;
             return;
         }
     }
