@@ -119,7 +119,7 @@ void pipe_cycle()
     }
     pipe_stage_execute();
     if(EX_to_MEM.decoded_instr.opcode == B) {
-        CURRENT_STATE.PC += 4;
+        CURRENT_STATE.PC == branch_pc;
         printf("after execute called pc value: %lx", CURRENT_STATE.PC);
         cycles++;
         return;
