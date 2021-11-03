@@ -698,7 +698,7 @@ void pipe_stage_decode()
 		DE_to_EX.decoded_instr.opcode = opcode;
 		DE_to_EX.decoded_instr.type = type;
 		DE_to_EX.decoded_instr.data = DE_to_EX.instr_data;
-        branch_pc = CURRENT_STATE.PC;
+        branch_pc = CURRENT_STATE.PC + 4;
         printf("branch pc %lx\n", branch_pc);
 	}
 
