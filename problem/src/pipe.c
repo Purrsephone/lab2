@@ -100,14 +100,14 @@ void pipe_cycle()
 {
 	pipe_stage_wb();
 	pipe_stage_mem();
-    if((MEM_to_WB.decoded_instr.opcode == B) && (flip == 0)) {
+    if(MEM_to_WB.decoded_instr.opcode == B) {
         if(taken) {
             printf("taken cond in cycle pc value: %lx", CURRENT_STATE.PC);
             pipe_stage_fetch();
             cycles++;
             taken = 0;
             CURRENT_STATE.PC += 4;
-            flip = !flip;
+            MEM_to_WB.decoded_instr.opcode == BUB;
             return;
         }
         if(!taken) {
