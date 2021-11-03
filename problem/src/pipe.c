@@ -23,13 +23,7 @@ uint64_t branch_pc;
 
 int cycles = 0;
 int stall = 0;
-int branch_stall = 0;
 int taken = 0;
-
-int call_fetch, call_decode, inc_pc;
-call_fetch = 0;
-call_decode = 0;
-inc_pc = 1;
 
 Pipe_Reg_IFtoDE IF_to_DE = {
     .pc = 0
@@ -108,6 +102,7 @@ void pipe_cycle()
     if(MEM_to_WB.decoded_instr.opcode == B) {
         if(taken) {
             pipe_stage_fetch();
+            cycles++;
             return;
         }
         if(!taken) {
@@ -115,16 +110,21 @@ void pipe_cycle()
             pipe_stage_decode();
             CURRENT_STATE.PC = branch_pc + 4;
             pipe_stage_fetch();
+            cycles++;
+            return;
         }
     }
     pipe_stage_execute();
     if(EX_to_MEM.decoded_instr.opcode == B) {
+        cycles++;
         return;
     }
     //only do these stages if we don't need to stall
     if(stall == 0) {
         pipe_stage_decode();
         if(DE_to_EX.decoded_instr.opcode == B) {
+            cycles++;
+            CURRENT_STATE.PC = branch_pc;
             return;
         }
         pipe_stage_fetch();
