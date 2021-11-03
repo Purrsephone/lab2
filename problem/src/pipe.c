@@ -101,14 +101,17 @@ void pipe_cycle()
 	pipe_stage_mem();
     if(MEM_to_WB.decoded_instr.opcode == B) {
         if(taken) {
+            printf("taken cond in cycle pc value: %lx", CURRENT_STATE.PC);
             pipe_stage_fetch();
             cycles++;
             return;
         }
         if(!taken) {
+            printf("NOT taken cond in cycle pc value: %lx", CURRENT_STATE.PC);
             IF_to_DE.pc = mem_read_32(branch_pc);
             pipe_stage_decode();
             CURRENT_STATE.PC = branch_pc + 4;
+            printf("NOT taken cond in cycle pc value after addition of 4: %lx", CURRENT_STATE.PC);
             pipe_stage_fetch();
             cycles++;
             return;
@@ -172,18 +175,18 @@ void check_dependency()
         else {
             DE_to_EX.dep = 0;
         }
-        printf("DEBUG check depen\n");
-        printf("MEM_to_WB.res %li\n", MEM_to_WB.res);
-        printf("DE_to_EX.dep %i\n", DE_to_EX.dep);
+        //printf("DEBUG check depen\n");
+    //    printf("MEM_to_WB.res %li\n", MEM_to_WB.res);
+        //printf("DE_to_EX.dep %i\n", DE_to_EX.dep);
         //check  if instr dependent on another instr in memory stage
     }
 }
 
 void pipe_stage_wb()
 {
-    printf("%s\n", "writeback");
-    printf("%u\n", MEM_to_WB.decoded_instr.opcode);
-    printf("mem to wb: %li \n", MEM_to_WB.res);
+    //printf("%s\n", "writeback");
+    //printf("%u\n", MEM_to_WB.decoded_instr.opcode);
+    //printf("mem to wb: %li \n", MEM_to_WB.res);
 
 
     // CBNZ, CBZ, STUR64, STUR32, STURB, STURH, HLT
@@ -305,9 +308,9 @@ void pipe_stage_wb()
 
 void pipe_stage_mem()
 {
-    printf("%u\n", EX_to_MEM.decoded_instr.opcode);
+    //printf("%u\n", EX_to_MEM.decoded_instr.opcode);
     printf("%s\n", "memory");
-    printf("stat cycle: %d\n", stat_cycles);
+    //printf("stat cycle: %d\n", stat_cycles);
 
     if(stall == 0) {
 
@@ -315,7 +318,7 @@ void pipe_stage_mem()
 	MEM_to_WB.decoded_instr = EX_to_MEM.decoded_instr;
     MEM_to_WB.instr_data = EX_to_MEM.instr_data;
     MEM_to_WB.res = EX_to_MEM.res;
-    printf("MEM TO WB res %li\n", MEM_to_WB.res);
+    //printf("MEM TO WB res %li\n", MEM_to_WB.res);
     // ADD, ADDI, ADDS, ADDSI, CBNZ, CBZ, AND, ANDS, EOR, ORR
     // LSLI, LSRI, MOVZ, SUB, SUBI, SUBS, SUBSI, MUL, CMP, CMPI
     // BR, B, BEQ, BNE, BGT, BLT, BGE, BLE can SKIP mem stage
@@ -347,7 +350,7 @@ void pipe_stage_mem()
          MEM_to_WB.res = (mem_read_32(EX_to_MEM.res) & 0xFFFF);
      }
      if (EX_to_MEM.decoded_instr.opcode == STUR64) {
-	     printf("stur64");
+	     //printf("stur64");
          uint32_t first_32 = (uint32_t)((CURRENT_STATE.REGS[EX_to_MEM.instr_data.rt] & 0xFFFFFFFF00000000LL) >> 32);
          uint32_t second_32 = (uint32_t)(CURRENT_STATE.REGS[EX_to_MEM.instr_data.rt] & 0xFFFFFFFFLL);
          // write result into memory
@@ -356,7 +359,7 @@ void pipe_stage_mem()
      }
      if (EX_to_MEM.decoded_instr.opcode == STUR32) {
          // write result into memory
-	 printf("stur32");
+	 //printf("stur32");
          mem_write_32(EX_to_MEM.res, CURRENT_STATE.REGS[EX_to_MEM.instr_data.rt]);
      }
      if (EX_to_MEM.decoded_instr.opcode == STURB) {
@@ -367,7 +370,7 @@ void pipe_stage_mem()
      }
      if (EX_to_MEM.decoded_instr.opcode == STURH) {
          // write result into memory
-	 printf("sturh");
+	 //printf("sturh");
          mem_write_32(EX_to_MEM.res, (CURRENT_STATE.REGS[EX_to_MEM.instr_data.rt] & 0xFFFF));
      }
      if (EX_to_MEM.decoded_instr.opcode == HLT) {
@@ -378,7 +381,7 @@ void pipe_stage_mem()
 
 void pipe_stage_execute()
 {
-    printf("%u\n", DE_to_EX.decoded_instr.opcode);
+    //printf("%u\n", DE_to_EX.decoded_instr.opcode);
     printf("%s\n", "execute");
 
     // check dependency
@@ -453,7 +456,9 @@ void pipe_stage_execute()
         }
         // B PROGRESS
         if (DE_to_EX.decoded_instr.opcode == B) {
-            uint64_t val = CURRENT_STATE.PC + DE_to_EX.instr_data.address;
+            uint64_t val = branch_pc + DE_to_EX.instr_data.address;
+            printf("execute val: %lx\n", val);
+            printf("execute current state pc: %lx\n", CURRENT_STATE.PC);
             if(val == (CURRENT_STATE.PC + 4)) {
                 taken = 0;
             }
@@ -583,15 +588,15 @@ void pipe_stage_execute()
     		 EX_to_MEM.res = final_addr;
     	}
         if (DE_to_EX.decoded_instr.opcode == LSLI) {
-            printf("LSLI cond \n");
+            //printf("LSLI cond \n");
             if ((DE_to_EX.dep == 0) || (DE_to_EX.dep == 1)) {
-                printf("ex to mem res %li\n", EX_to_MEM.res);
+                //printf("ex to mem res %li\n", EX_to_MEM.res);
                  EX_to_MEM.res = CURRENT_STATE.REGS[DE_to_EX.instr_data.rn] << (64 - DE_to_EX.instr_data.immediate);
             }
             if (DE_to_EX.dep == 2) {
                 EX_to_MEM.res = DE_to_EX.res << (64 - DE_to_EX.instr_data.immediate);
-                printf("ex to mem res %li\n", EX_to_MEM.res);
-                printf("de to ex res %li\n", DE_to_EX.res);
+                //printf("ex to mem res %li\n", EX_to_MEM.res);
+                //printf("de to ex res %li\n", DE_to_EX.res);
             }
         }
         if (DE_to_EX.decoded_instr.opcode == LSRI) {
@@ -691,10 +696,8 @@ void pipe_stage_decode()
 		DE_to_EX.decoded_instr.opcode = opcode;
 		DE_to_EX.decoded_instr.type = type;
 		DE_to_EX.decoded_instr.data = DE_to_EX.instr_data;
-        call_fetch = 0;
-        inc_pc = 0;
-        //shoud it be current state pc + 4 or just PC ??
-        branch_pc = CURRENT_STATE.PC + 4;
+        branch_pc = CURRENT_STATE.PC;
+        printf("branch pc %lx\n", branch_pc);
 	}
 
 	// 8 bit opcodes
@@ -1123,7 +1126,7 @@ void pipe_stage_decode()
 		DE_to_EX.decoded_instr.data = DE_to_EX.instr_data;
 	}
 	//printf("%u\n", DE_to_EX.decoded_instr.opcode);
-	printf("decode de to ex rn  %lu\n", DE_to_EX.instr_data.rn);
+	//printf("decode de to ex rn  %lu\n", DE_to_EX.instr_data.rn);
 }
 
 void pipe_stage_fetch()
