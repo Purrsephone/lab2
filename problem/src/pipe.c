@@ -466,7 +466,7 @@ void pipe_stage_execute()
             }
             else {
                 taken = 1;
-                CURRENT_STATE.PC = val;
+                //CURRENT_STATE.PC = val;
             }
             return;
         }
