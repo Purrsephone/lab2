@@ -18,9 +18,13 @@
 
 uint64_t pc;
 uint64_t hlt_pc;
+uint64_t branch_pc;
+
 
 int cycles = 0;
 int stall = 0;
+int branch_stall = 0;
+int taken = 3;
 
 Pipe_Reg_IFtoDE IF_to_DE = {
     .pc = 0
@@ -98,11 +102,23 @@ void pipe_cycle()
 	pipe_stage_mem();
     pipe_stage_execute();
     //only do these stages if we don't need to stall
-    if(stall == 0) {
-    	pipe_stage_decode();
-    	pipe_stage_fetch();
+    if(stall == 0) && (branch_stall == 0)) {
+        if(taken == 3) {
+            pipe_stage_decode();
+            if(branch_stall == 0) {
+                pipe_stage_fetch();
+            }
+            CURRENT_STATE.PC = CURRENT_STATE.PC + 4;
+        }
+    	if(taken == 0) {
+            pipe_stage_decode();
+            pipe_stage_fetch();
+        }
+        if(taken == 1) {
+            pipe_stage_fetch();
+        }
     	//will need to change later
-    	CURRENT_STATE.PC = CURRENT_STATE.PC + 4;
+    	//CURRENT_STATE.PC = CURRENT_STATE.PC + 4;
     }
     if(stall == 1)
     {
@@ -427,7 +443,22 @@ void pipe_stage_execute()
         }
         // TODO
         if (DE_to_EX.decoded_instr.opcode == B) {
-            CURRENT_STATE.PC = CURRENT_STATE.PC + DE_to_EX.instr_data.address;
+            unint64_t val = CURRENT_STATE.PC + DE_to_EX.instr_data.address;
+            // CORRECT CONDITION
+            if (val == stall_pc) {
+                IF_to_DE.pc = mem_read_32(val);
+                CURRENT_STATE.PC = val + 4;
+                taken = 0;
+                branch_stall = 0;
+            }
+            // NOT taken condition is not relevant here
+            //CURRENT_STATE.PC = CURRENT_STATE.PC + DE_to_EX.instr_data.address;
+            //taken condition, INCORRECT
+            if(val != stall_pc) {
+                CURRENT_STATE.PC = CURRENT_STATE.PC + DE_to_EX.instr_data.address;
+                taken = 1;
+                branch_stall = 0;
+            }
         }
         // TODO
         if (DE_to_EX.decoded_instr.opcode == BEQ) {
@@ -657,6 +688,10 @@ void pipe_stage_decode()
 		DE_to_EX.decoded_instr.opcode = opcode;
 		DE_to_EX.decoded_instr.type = type;
 		DE_to_EX.decoded_instr.data = DE_to_EX.instr_data;
+        branch_stall = 0;
+        //because it's the pc in this stage plus 4 ? or not plus 4, idk
+        stall_pc = CURRENT_STATE.PC;
+
 	}
 
 	// 8 bit opcodes
