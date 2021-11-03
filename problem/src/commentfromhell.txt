@@ -1,0 +1,28 @@
+**FETCH**
+
+**DECODE**
+
+**EXECUTE**
+
+**MEMORY**
+read and write operations take effect immediately
+same functions 
+    uint32_t mem_read_32(uint64_t address);
+    void mem_write_32(uint64_t address, uint32_t value);
+
+Register File: assume combinational read (i.e., output of the read data port is a combinational
+function of the RF contents and the corresponding read select port) and synchronous write (i.e., the selected
+register is updated on the positive edge clock transition when write enable is asserted).
+
+**REGISTER WRITEBACK**
+
+**MISC**
+PC is the address of the instruction following FETCH
+PC should be HLT + 8 at the end of sim (stop advnacing PC when HLT is in decode)
+when HLT - fininsh everything else before termination
+
+http://www-5.unipv.it/mferretti/cdol/aca/Charts/02-pipeline-MF.pdf
+https://www.cs.fsu.edu/~zwang/files/cda3101/Fall2017/Lecture8_cda3101.pdf
+
+
+cannot change default func parameters

@@ -1,0 +1,25 @@
+lab2-test.txt
+---------
+
+Section 1: cycle-by-cycle comparison
+Test: step1-a-input.x
+Reference simulator cycle count: 22
+Student simulator cycle count: 22
+Number of matching cycles: 22
+
+Test: step1-b-input.x
+Reference simulator cycle count: 20
+Student simulator cycle count: 20
+Number of matching cycles: 20
+
+Test: step2-a-input.x
+Reference simulator cycle count: 15
+Student simulator cycle count: 15
+Number of matching cycles: 15
+
+Test: step2-b-input.x
+Reference simulator cycle count: 14
+Student simulator cycle count: 14
+Number of matching cycles: 14
+
+Test: step3-input.x

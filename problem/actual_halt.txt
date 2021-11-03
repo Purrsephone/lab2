@@ -1,0 +1,3 @@
+ARM Simulator
+
+Error: Can't open program file inputs/step3-input.x
