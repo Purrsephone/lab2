@@ -24,7 +24,12 @@ uint64_t branch_pc;
 int cycles = 0;
 int stall = 0;
 int branch_stall = 0;
-int taken = 3;
+int taken = 0;
+
+int call_fetch, call_decode, inc_pc;
+call_fetch = 0;
+call_decode = 0;
+inc_pc = 1;
 
 Pipe_Reg_IFtoDE IF_to_DE = {
     .pc = 0
@@ -100,10 +105,28 @@ void pipe_cycle()
 {
 	pipe_stage_wb();
 	pipe_stage_mem();
+    if(MEM_to_WB.decoded_instr.opcode == B) {
+        if(taken) {
+            pipe_stage_fetch();
+            return;
+        }
+        if(!taken) {
+            IF_to_DE.pc = mem_read_32(branch_pc);
+            pipe_stage_decode();
+            CURRENT_STATE.PC = branch_pc + 4;
+            pipe_stage_fetch();
+        }
+    }
     pipe_stage_execute();
+    if(EX_to_MEM.decoded_instr.opcode == B) {
+        return;
+    }
     //only do these stages if we don't need to stall
     if(stall == 0) {
         pipe_stage_decode();
+        if(DE_to_EX.decoded_instr.opcode == B) {
+            return;
+        }
         pipe_stage_fetch();
         CURRENT_STATE.PC = CURRENT_STATE.PC + 4;
     }
@@ -430,7 +453,15 @@ void pipe_stage_execute()
         }
         // B PROGRESS
         if (DE_to_EX.decoded_instr.opcode == B) {
-            CURRENT_STATE.PC = CURRENT_STATE.PC + DE_to_EX.instr_data.address;
+            uint64_t val = CURRENT_STATE.PC + DE_to_EX.instr_data.address;
+            if(val == (CURRENT_STATE.PC + 4)) {
+                taken = 0;
+            }
+            else {
+                taken = 1;
+                CURRENT_STATE.PC = val;
+            }
+            return;
         }
         // TODO
         if (DE_to_EX.decoded_instr.opcode == BEQ) {
@@ -660,7 +691,10 @@ void pipe_stage_decode()
 		DE_to_EX.decoded_instr.opcode = opcode;
 		DE_to_EX.decoded_instr.type = type;
 		DE_to_EX.decoded_instr.data = DE_to_EX.instr_data;
-
+        call_fetch = 0;
+        inc_pc = 0;
+        //shoud it be current state pc + 4 or just PC ??
+        branch_pc = CURRENT_STATE.PC + 4;
 	}
 
 	// 8 bit opcodes
